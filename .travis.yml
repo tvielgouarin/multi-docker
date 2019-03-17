@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t tvielgouarin/react-test -f ./client/Dockerfile.dev .
+
+script:
+  - docker run tvielgouarin/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t tvielgouarin/multi-client -f ./client
+  - docker build -t tvielgouarin/multi-nginx -f ./nginx
+  - docker build -t tvielgouarin/multi-server -f ./server
+  - docker build -t tvielgouarin/multi-worker -f ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push tvielgouarin/multi-client
+  - docker push tvielgouarin/multi-nginx
+  - docker push tvielgouarin/multi-server
+  - docker push tvielgouarin/multi-worker
